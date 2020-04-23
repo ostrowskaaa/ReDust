@@ -3,6 +3,7 @@ import numpy as np
 
 
 # ---- IMAGE COMPRARISON ----
+# percentage of similarity of two given images
 img1 = cv2.imread('kot1.jpg')
 img2 = cv2.imread('kot1a.jpg')
 
@@ -22,6 +23,7 @@ else:
 
 
 # ---- IMAGE INPAINTING ----
+# repair damaged image by adding the mask and inpaint
 img = cv2.imread('1.jpg')
 mask = cv2.imread('1-mask.jpg', 0)
 
