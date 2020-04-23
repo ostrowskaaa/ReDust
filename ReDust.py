@@ -47,9 +47,14 @@ train_mask = LoadBWData(train_mask)
 
 model = keras.Sequential([
     keras.layers.Flatten(input_shape=(100,100,3)),
-    keras.layers.Dense(32, activation='sigmoid'),
+    keras.layers.Dense(32),
+    keras.layers.Dropout(0.5),
+    keras.layers.Activation('sigmoid'),
     keras.layers.Dense(10)
 ])
+
+summary = model.summary()
+print (summary)
 
 model.compile(optimizer='adam',
                 loss='binary_crossentropy',
