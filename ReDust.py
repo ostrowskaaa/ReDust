@@ -6,7 +6,6 @@ import tensorflow as tf
 from tensorflow import keras
 from keras.models import Sequential
 from keras.layers import Dense, Flatten
-from keras.preprocessing.image import img_to_array, array_to_img
 
 
 def LoadColorData(folderName):
