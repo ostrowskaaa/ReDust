@@ -4,8 +4,9 @@ import cv2
 import matplotlib.pyplot as plt
 import tensorflow as tf
 from tensorflow import keras
-from keras.models import Sequential
+from keras.models import Sequential, load_model
 from keras.layers import Dense, Flatten
+from keras.preprocessing.image import img_to_array, array_to_img
 
 
 def LoadColorData(folderName):
@@ -50,7 +51,8 @@ model = keras.Sequential([
     keras.layers.Dense(32),
     keras.layers.Dropout(0.5),
     keras.layers.Activation('sigmoid'),
-    keras.layers.Dense(10)
+    keras.layers.Dense(10000),
+    keras.layers.Reshape((100,100))
 ])
 
 summary = model.summary()
@@ -60,8 +62,45 @@ model.compile(optimizer='adam',
                 loss='binary_crossentropy',
                 metrics=['accuracy'])
 
-model.fit(train_images, train_mask, batch_size=32, epochs=1)
+fit = model.fit(train_images, train_mask, batch_size=32, epochs=1)
 
-eval_model=classifier.evaluate(train_images, train_mask, verbose=2)
+eval_model = model.evaluate(train_images, train_mask, verbose=2)
 
 print('Test accuracy:', eval_model)
+
+#probability_model = tf.keras.Sequential([model, tf.keras.layers.Softmax()])
+predictions = model.predict(train_images)
+data = []
+for i in predictions:
+    img = i.reshape((100, 100, 1))
+    data.append(img)
+
+img = keras.preprocessing.image.array_to_img(data[0], scale=True)
+print(type(img))
+from PIL import Image
+img.save('trial.png')
+im = Image.open('trial.png')
+im.show()
+
+
+
+'''
+def plot_image(i, predictions_array, img):
+  predictions_array, img = predictions_array[i], img[i]
+  plt.grid(False)
+  plt.xticks([])
+  plt.yticks([])
+
+  plt.imshow(img, predictions_array)
+
+num_rows = 5
+num_cols = 3
+num_images = num_rows*num_cols
+plt.figure(figsize=(2*2*num_cols, 2*num_rows))
+for i in range(num_images):
+  plt.subplot(num_rows, 2*num_cols, 2*i+1)
+  plot_image(i, predictions[i], train_images)
+  plt.subplot(num_rows, 2*num_cols, 2*i+2)
+plt.tight_layout()
+plt.show()
+'''
