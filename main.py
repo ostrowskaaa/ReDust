@@ -47,14 +47,13 @@ train_mask = LoadBWData(train_mask)
 
 
 model = keras.Sequential([
-    keras.layers.Dense(30000),
-    keras.layers.Conv2D(16, (3,3), padding='same', input_shape=(100,100, 3)),
-    keras.layers.Activation('relu'),
-    keras.layers.Dropout(0.4),
-    keras.layers.Conv2D(16, (3,3), padding='same', input_shape=(100,100, 3)),
-    keras.layers.Activation('relu'),
-    keras.layers.Dropout(0.4),
-    keras.layers.Flatten(input_shape=(100,100,3)),
+    keras.layers.Conv2D(32, (3,3), input_shape=(100,100, 3), activation='relu'),
+    keras.layers.MaxPooling2D(pool_size=(2, 2)),
+    keras.layers.Conv2D(64, (3,3), activation='relu'),
+    keras.layers.MaxPooling2D(pool_size=(2, 2)),
+    keras.layers.Conv2D(128, (3,3), activation='relu'),
+    keras.layers.MaxPooling2D(pool_size=(2, 2)),
+    keras.layers.Flatten(),
     keras.layers.Dense(10000, activation='sigmoid'),
     keras.layers.Reshape((100,100))
 ])
@@ -65,7 +64,7 @@ model.compile(optimizer='adam',
                 metrics=['accuracy'])
 
 
-fit = model.fit(train_images, train_mask, batch_size=32, epochs=1)
+fit = model.fit(train_images, train_mask, batch_size=32, epochs=4)
 
 
 eval_model = model.evaluate(train_images, train_mask, verbose=2)
@@ -81,13 +80,7 @@ for i in predictions:
     data.append(img)
 
 img = keras.preprocessing.image.array_to_img(data[0], scale=True)
-#print(type(img))
-
-text_file = open('outputData.txt', 'w')
-text_file.write(summary)
-text_file.write('\n\n\n')
-text_file.write('accuracy: ', eval_model)
-text_file.close()
+print(type(img))
 
 
 from PIL import Image
