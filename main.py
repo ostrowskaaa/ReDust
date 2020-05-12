@@ -1,7 +1,9 @@
 import os
 import numpy as np
 import cv2
+from PIL import Image
 import matplotlib.pyplot as plt
+
 import tensorflow as tf
 from tensorflow import keras
 from keras.models import Sequential, load_model
@@ -37,13 +39,25 @@ def LoadBWData(folderName):
     x_data = np.array(x_data)
     return x_data
 
-# load training data
-train = 'train'
-train_images = LoadColorData(train)
+# load  images
+data_images = 'data_images'
+data_images = LoadColorData(data_images)
+# divide data into validation, train and test
+val_images, train_images, test_images = np.split(data_images, [int(len(data_images)*0.1), int(len(data_images)*0.8)])
 
-# load training masks
-train_mask = 'train_mask'
-train_mask = LoadBWData(train_mask)
+
+# load  masks
+data_mask = 'data_mask'
+data_mask = LoadBWData(data_mask)
+# divide data into validation, train and test
+val_mask, train_mask, test_mask = np.split(data_mask, [int(len(data_mask)*0.1), int(len(data_mask)*0.8)])
+
+
+#############
+loss_options = ['categorical_crossentropy', 'sparse_categorical_crossentropy', 'binary_crossentropy']
+batch_options = [16, 32, 64, 128]
+epochs_options = [10, 15, 20, 25, 30, 35, 40, 45, 50, 55, 60, 65, 70, 75, 80, 95, 100, 105, 110, 115, 120]
+#############
 
 
 model = keras.Sequential([
@@ -64,26 +78,46 @@ model.compile(optimizer='adam',
                 metrics=['accuracy'])
 
 
-fit = model.fit(train_images, train_mask, batch_size=32, epochs=4)
 
-
-eval_model = model.evaluate(train_images, train_mask, verbose=2)
-
-
+fit = model.fit(train_images, train_mask, validation_split=0.2, batch_size=16, epochs=1)
+eval_model = model.evaluate(test_images, test_mask, verbose=2)
 summary = model.summary()
 
 
-predictions = model.predict(train_images)
-data = []
+# Plot training & validation accuracy values
+fig = plt.figure(figsize=(2,1))
+plt.subplot(121)
+plt.plot(fit.history['accuracy'])
+plt.plot(fit.history['val_accuracy'])
+plt.title('Model accuracy')
+plt.ylabel('Accuracy')
+plt.xlabel('Epoch')
+plt.legend(['Train', 'Test'], loc='upper left')
+# plot training & validation loss values
+plt.subplot(122)
+plt.plot(fit.history['loss'])
+plt.plot(fit.history['val_loss'])
+plt.title('Model loss')
+plt.ylabel('Loss')
+plt.xlabel('Epoch')
+plt.legend(['Train', 'Test'], loc='upper left')
+fig.savefig('results/'+'epochs'+epochs_string+'batch'+batch_string+'loss'+'.png', dpi=fig.dpi)
+
+
+# output into array with shape (100,100,1)
+predictions = model.predict(val_images)
+prediction_array = []
 for i in predictions:
-    img = i.reshape((100, 100, 1))
-    data.append(img)
-
-img = keras.preprocessing.image.array_to_img(data[0], scale=True)
-print(type(img))
+    img_array = i.reshape((100, 100, 1))
+    prediction_array.append(img_array)
 
 
-from PIL import Image
-img.save('trial.png')
-im = Image.open('trial.png')
-im.show()
+# plot 6 predicted masks
+fig2 = plt.figure(figsize=(2,3))
+rows = 2
+for j in range(6):
+    img = keras.preprocessing.image.array_to_img(prediction_array[j], scale=True)
+    plt.subplot(rows,3,j+1)
+    plt.axis('off')
+    plt.imshow(img, cmap='binary')
+fig2.savefig('results/'+'epochs'+epochs_string+'batch'+batch_string+'loss'+'_mask.png', dpi=fig.dpi)
