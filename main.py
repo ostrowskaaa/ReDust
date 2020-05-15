@@ -52,13 +52,30 @@ data_mask = LoadBWData(data_mask)
 # divide data into validation, train and test
 val_mask, train_mask, test_mask = np.split(data_mask, [int(len(data_mask)*0.1), int(len(data_mask)*0.8)])
 
+####################################################################
+#        CUSTOM METRIC
 
-#############
-loss_options = ['categorical_crossentropy', 'sparse_categorical_crossentropy', 'binary_crossentropy']
-batch_options = [16, 32, 64, 128]
-epochs_options = [10, 15, 20, 25, 30, 35, 40, 45, 50, 55, 60, 65, 70, 75, 80, 95, 100, 105, 110, 115, 120]
-#############
+def compareMasks(y_true, y_pred):
+    mean = 0
+    y_true_array = np.add(y_true, 3)
+    print(y_true_array.shape())
+#import keras.backend as K
+    for i in true_mask:
+        difference = cv2.subtract(y_true[i], y_pred[i])
 
+        # percentage difference
+        percentage = (np.count_nonzero(difference)*100) / difference.size
+        mean += percentage
+    return mean/len(true_mask)
+
+
+####################################################################
+epochs=1
+batch=16
+loss='categorical_crossentropy'
+epochs_string = str(epochs)
+batch_string = str(batch)
+####################################################################
 
 model = keras.Sequential([
     keras.layers.Conv2D(32, (3,3), input_shape=(100,100, 3), activation='relu'),
@@ -75,7 +92,7 @@ model = keras.Sequential([
 
 model.compile(optimizer='adam',
                 loss='categorical_crossentropy',
-                metrics=['accuracy'])
+                metrics=[compareMasks])
 
 
 
@@ -111,6 +128,8 @@ for i in predictions:
     img_array = i.reshape((100, 100, 1))
     prediction_array.append(img_array)
 
+similarity = compareMasks(train_mask,prediction_array)
+
 
 # plot 6 predicted masks
 fig2 = plt.figure(figsize=(2,3))
@@ -121,3 +140,4 @@ for j in range(6):
     plt.axis('off')
     plt.imshow(img, cmap='binary')
 fig2.savefig('results/'+'epochs'+epochs_string+'batch'+batch_string+'loss'+'_mask.png', dpi=fig.dpi)
+
