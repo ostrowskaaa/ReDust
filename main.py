@@ -10,7 +10,6 @@ from keras.models import Sequential, load_model
 from keras.layers import Dense, Flatten
 from keras.preprocessing.image import img_to_array, array_to_img
 
-
 def LoadColorData(folderName):
     PATH = os.getcwd()
     folder_path = PATH + '/data/' + folderName + '/'
@@ -39,12 +38,32 @@ def LoadBWData(folderName):
     x_data = np.array(x_data)
     return x_data
 
+####################################################################
+#        CUSTOM METRIC
+
+def tensorToNumpy(y_true, y_pred):
+    return tf.numpy_function(compareMasks, (y_true, y_pred), tf.double)
+
+def compareMasks(y_true, y_pred):
+    mean = 0
+    print(y_true.shape)
+    
+    array_of_percentages = []
+    for i in y_true:
+        difference = cv2.subtract(y_true[i], y_pred[i])
+
+        # percentage difference
+        percentage = (np.count_nonzero(difference)*100) / difference.size
+        array_of_percentages.append(percentage)
+    return  array_of_percentages
+
+####################################################################
+
 # load  images
 data_images = 'data_images'
 data_images = LoadColorData(data_images)
 # divide data into validation, train and test
 val_images, train_images, test_images = np.split(data_images, [int(len(data_images)*0.1), int(len(data_images)*0.8)])
-
 
 # load  masks
 data_mask = 'data_mask'
@@ -52,30 +71,13 @@ data_mask = LoadBWData(data_mask)
 # divide data into validation, train and test
 val_mask, train_mask, test_mask = np.split(data_mask, [int(len(data_mask)*0.1), int(len(data_mask)*0.8)])
 
-####################################################################
-#        CUSTOM METRIC
-
-def compareMasks(y_true, y_pred):
-    mean = 0
-    y_true_array = np.add(y_true, 3)
-    print(y_true_array.shape())
-#import keras.backend as K
-    for i in true_mask:
-        difference = cv2.subtract(y_true[i], y_pred[i])
-
-        # percentage difference
-        percentage = (np.count_nonzero(difference)*100) / difference.size
-        mean += percentage
-    return mean/len(true_mask)
-
-
-####################################################################
+##################################
 epochs=1
 batch=16
 loss='categorical_crossentropy'
 epochs_string = str(epochs)
 batch_string = str(batch)
-####################################################################
+###############################
 
 model = keras.Sequential([
     keras.layers.Conv2D(32, (3,3), input_shape=(100,100, 3), activation='relu'),
@@ -92,8 +94,7 @@ model = keras.Sequential([
 
 model.compile(optimizer='adam',
                 loss='categorical_crossentropy',
-                metrics=[compareMasks])
-
+                metrics=[tensorToNumpy])
 
 
 fit = model.fit(train_images, train_mask, validation_split=0.2, batch_size=16, epochs=1)
@@ -101,7 +102,7 @@ eval_model = model.evaluate(test_images, test_mask, verbose=2)
 summary = model.summary()
 
 
-# Plot training & validation accuracy values
+# Plot training & validation ACCURACY VALUES
 fig = plt.figure(figsize=(2,1))
 plt.subplot(121)
 plt.plot(fit.history['accuracy'])
@@ -110,7 +111,8 @@ plt.title('Model accuracy')
 plt.ylabel('Accuracy')
 plt.xlabel('Epoch')
 plt.legend(['Train', 'Test'], loc='upper left')
-# plot training & validation loss values
+
+# plot training & validation LOSS VALUES
 plt.subplot(122)
 plt.plot(fit.history['loss'])
 plt.plot(fit.history['val_loss'])
@@ -128,8 +130,6 @@ for i in predictions:
     img_array = i.reshape((100, 100, 1))
     prediction_array.append(img_array)
 
-similarity = compareMasks(train_mask,prediction_array)
-
 
 # plot 6 predicted masks
 fig2 = plt.figure(figsize=(2,3))
@@ -140,4 +140,3 @@ for j in range(6):
     plt.axis('off')
     plt.imshow(img, cmap='binary')
 fig2.savefig('results/'+'epochs'+epochs_string+'batch'+batch_string+'loss'+'_mask.png', dpi=fig.dpi)
-
