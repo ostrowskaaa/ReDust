@@ -45,17 +45,13 @@ def tensorToNumpy(y_true, y_pred):
     return tf.numpy_function(compareMasks, (y_true, y_pred), tf.double)
 
 def compareMasks(y_true, y_pred):
-    mean = 0
-    print(y_true.shape)
-    
     array_of_percentages = []
     for i in y_true:
         difference = cv2.subtract(y_true[i], y_pred[i])
-
         # percentage difference
-        percentage = (np.count_nonzero(difference)*100) / difference.size
+        percentage = 100 - (np.count_nonzero(difference) *100 / difference.size)
         array_of_percentages.append(percentage)
-    return  array_of_percentages
+    return np.array(array_of_percentages)
 
 ####################################################################
 
