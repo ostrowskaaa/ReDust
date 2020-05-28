@@ -113,10 +113,10 @@ for epochs in epochs_options:
                 prediction_array.append(img_array)
 
             # save model on computer with 5 best metrics
-            sorted(best_model,key=itemgetter(1))
+            sorted(best_models,key=itemgetter(1))
             if len(best_metric)<5 or test_acc>best_metric[4][1]:
                 name = 'models/'+'epochs'+epochs_string+'batch'+batch_string+loss+'.h5'
-                best_model.append(model, test_acc, name)
+                best_models.append(model, test_acc, name)
                 print(best_metric)
 
             # Plot training & validation ACCURACY VALUES
