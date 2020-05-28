@@ -150,5 +150,5 @@ for epochs in epochs_options:
                 plt.imshow(img, cmap='binary')
             fig2.savefig('results/'+'epochs'+epochs_string+'batch'+batch_string+loss+'_mask.png', dpi=fig.dpi)
 
-for i in len(best_models):
-    model.save(best_models[i][2])
+for i in range(5):
+    best_models[i][0].save(best_models[i][2])
