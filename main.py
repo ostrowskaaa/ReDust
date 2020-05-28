@@ -151,4 +151,4 @@ for epochs in epochs_options:
             fig2.savefig('results/'+'epochs'+epochs_string+'batch'+batch_string+loss+'_mask.png', dpi=fig.dpi)
 
 for i in len(best_models):
-    model.save(name[i][2])
+    model.save(best_models[i][2])
