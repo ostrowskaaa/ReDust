@@ -124,8 +124,8 @@ for epochs in epochs_options:
             plt.subplot(121)
             plt.plot(fit.history['accuracy'])
             plt.plot(fit.history['val_accuracy'])
-            plt.title('Model percentage of similarity')
-            plt.ylabel('Percentage of similarity')
+            plt.title('Model accuracy')
+            plt.ylabel('Accuracy')
             plt.xlabel('Epoch')
             plt.legend(['Train', 'Test'], loc='upper left')
 
