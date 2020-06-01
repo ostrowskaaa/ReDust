@@ -95,7 +95,7 @@ for epochs in epochs_options:
                 prediction_array.append(img_array)
 
             # save model on computer
-            name = 'models/'+'epochs'+epochs_string+'batch'+batch_string+loss+'.h5'
+            name = 'epochs'+epochs_string+'batch'+batch_string+loss
             model.save(name)
             file = open('models/'+str(test_loss)+".txt", "w")
             file.write(name)
