@@ -36,21 +36,6 @@ def LoadBWData(folderName):
     return np.array(x_data)
 
 ####################################################################
-#        CUSTOM METRIC
-
-def tensorToNumpy(y_true, y_pred):
-    return tf.numpy_function(compareMasks, (y_true, y_pred), tf.double)
-
-def compareMasks(y_true, y_pred):
-    array_of_percentages = []
-    for i in y_true:
-        difference = cv2.subtract(y_true[i], y_pred[i])
-        # percentage difference
-        percentage = 100 - (np.count_nonzero(difference) *100 / difference.size)
-        array_of_percentages.append(percentage)
-    return np.array(array_of_percentages)
-
-####################################################################
 
 # load  images
 data_images = 'data_images'
@@ -70,17 +55,14 @@ train_mask, test_mask = np.split(data_mask, [int(len(data_mask)*0.8)])
 # training loop for different options
 loss_options = ['categorical_crossentropy', 'binary_crossentropy']
 batch_options = [16, 32, 64, 128]
-epochs_options = [10, 15, 20, 25, 30, 35, 40, 45, 50, 55, 60, 65, 70, 75, 80, 95, 100, 105, 110, 115, 120]
+epochs_options = [10, 15, 20, 25, 30, 35, 40, 45, 50, 55, 60, 65, 70, 75, 80, 95, 100]
 
-best_models = []
 
 for epochs in epochs_options:
     for batch in batch_options:
         for loss in loss_options:
             epochs_string = str(epochs)
             batch_string = str(batch)
-
-
 
 
             model = keras.Sequential([
@@ -112,12 +94,13 @@ for epochs in epochs_options:
                 img_array = i.reshape((100, 100, 1))
                 prediction_array.append(img_array)
 
-            # save model on computer with 5 best metrics
-            sorted(best_models,key=itemgetter(1))
-            if len(best_models)<5 or test_acc>best_models[4][1]:
-                name = 'models/'+'epochs'+epochs_string+'batch'+batch_string+loss+'.h5'
-                best_models.append(model, test_acc, name)
-                print(best_models)
+            # save model on computer
+            name = 'models/'+'epochs'+epochs_string+'batch'+batch_string+loss+'.h5'
+            model.save(name)
+            file = open('models/'+str(test_loss)+".txt", "w")
+            file.write(name)
+            file.close()
+
 
             # Plot training & validation ACCURACY VALUES
             fig = plt.figure()
@@ -149,6 +132,3 @@ for epochs in epochs_options:
                 plt.axis('off')
                 plt.imshow(img, cmap='binary')
             fig2.savefig('results/'+'epochs'+epochs_string+'batch'+batch_string+loss+'_mask.png', dpi=fig.dpi)
-
-for i in range(5):
-    best_models[i][0].save(best_models[i][2])
