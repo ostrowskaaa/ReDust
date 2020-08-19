@@ -63,18 +63,19 @@ def tensorToNumpy(y_true, y_pred):
     return tf.numpy_function(custom_acc, (y_true, y_pred), tf.double)
 
 def custom_acc(y_true, y_pred):
-    count_white = 0
-    count_equal_white = 0
-    for i in true_array:
-        for x in np.nditer(true_array[i]):
-            for y in np.nditer(pred_array[i]):
+    results_array = []
+    for i in range(y_true.shape[0]):
+        count_white = 0
+        count_equal_white = 0
+        for x in np.nditer(y_true[i]):
+            for y in np.nditer(y_pred[i]):
                 if x != 0:
                     count_white += 1
                     if y != 0:
                         count_equal_white += 1
 
-    percentage = count_white / count_equal_white
-    return TENSOR
+        results_array.append((count_white / count_equal_white) *100)
+    return np.array(results_array)
 
 def categorical_accuracy(y_true, y_pred):
     return K.cast(K.equal(K.argmax(y_true, axis=-1),
@@ -117,7 +118,7 @@ for epochs in epochs_options:
 
             model.compile(optimizer='adam',
                             loss=['categorical_crossentropy'],
-                            metrics=[custom_acc])
+                            metrics=[tensorToNumpy])
 
             fit = model.fit(train_images, train_masks, validation_split=0.2, batch_size=batch_size, epochs=epochs)
             test_loss, test_acc = model.evaluate(test_images, test_masks, verbose=2)
@@ -140,8 +141,8 @@ for epochs in epochs_options:
             # Plot training & validation ACCURACY VALUES
             fig = plt.figure()
             plt.subplot(121)
-            plt.plot(fit.history['categorical_accuracy'])
-            plt.plot(fit.history['val_categorical_accuracy'])
+            plt.plot(fit.history['tensorToNumpy'])
+            plt.plot(fit.history['val_tensorToNumpy'])
             plt.title('Model accuracy')
             plt.ylabel('Accuracy')
             plt.xlabel('Epoch')
