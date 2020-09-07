@@ -11,9 +11,10 @@ from keras.models import Sequential, load_model
 from keras.layers import Dense, Flatten
 import keras.backend as K
 
-loss_options = ['categorical_crossentropy', 'binary_crossentropy']
-batch_options = [16, 32, 64, 128]
-epochs_options = [10, 15, 20, 25, 30, 35, 40, 45, 50, 55, 60, 65, 70, 75, 80, 95, 100]
+batch_size = 32
+epochs = 50
+loss='categorical_crossentropy'
+saving_name = 'no_validation_categorical_e40_b32'
 
 ## ----- LOAD DATA ------
 def load_data(folderName):
@@ -65,16 +66,17 @@ def tensorToNumpy(y_true, y_pred):
 def custom_acc(y_true, y_pred):
     results_array = []
     for i in range(y_true.shape[0]):
+        #print('zdjcie: ', i)
         count_white = 0
         count_equal_white = 0
-        for x in np.nditer(y_true[i]):
-            for y in np.nditer(y_pred[i]):
-                if x != 0:
-                    count_white += 1
-                    if y != 0:
-                        count_equal_white += 1
-
-        results_array.append((count_white / count_equal_white) *100)
+        for x in np.nditer([y_true[i], y_pred[i]]):
+            if x[0] != 0:
+                count_white += 1
+                if x[1] != 0:
+                    count_equal_white += 1
+        #print(count_white)
+        #print(count_equal_white)
+        results_array.append((count_equal_white / count_white) *100)
     return np.array(results_array)
 
 def categorical_accuracy(y_true, y_pred):
@@ -82,88 +84,84 @@ def categorical_accuracy(y_true, y_pred):
                           K.argmax(y_pred, axis=-1)),
                           K.floatx()) 
 
-##################      ------------         ###################
+##################      ------  PROGRAM  ------         ###################
 train_images = load_data('train_images')
 train_masks = load_bw_data('train_masks')
 test_images = load_data('test_images')
 test_masks = load_bw_data('test_masks')
 
 # connect original images with the augmented ones
-train_images = np.concatenate((train_images, dataset_augmentation(train_images))) # ~3740 images now
+train_images = np.concatenate((train_images, dataset_augmentation(train_images))) # ~3744 images now
 train_masks = np.concatenate((train_masks, dataset_augmentation(train_masks)))
 test_images = np.concatenate((test_images, dataset_augmentation(test_images)))
 test_masks = np.concatenate((test_masks, dataset_augmentation(test_masks)))
 
-#######################
+## ----- MODEL -----
+model = keras.Sequential([
+                keras.layers.Conv2D(32, (3,3), input_shape=(100,100, 3), activation='relu'),
+                keras.layers.MaxPooling2D(pool_size=(2, 2)),
+                keras.layers.Conv2D(64, (3,3), activation='relu'),
+                keras.layers.MaxPooling2D(pool_size=(2, 2)),
+                keras.layers.Conv2D(128, (3,3), activation='relu'),
+                keras.layers.MaxPooling2D(pool_size=(2, 2)),
+                keras.layers.Flatten(),
+                keras.layers.Dense(10000, activation='sigmoid'),
+                keras.layers.Reshape((100,100))
+            ])
 
-# training loop for different options
-for epochs in epochs_options:
-    for batch in batch_options:
-        for loss in loss_options:
-            epochs_string = str(epochs)
-            batch_string = str(batch)
+model.compile(optimizer='adam',
+                loss=[loss],
+                metrics=['accuracy'])
 
-            ## ----- MODEL -----
-            model = keras.Sequential([
-                            keras.layers.Conv2D(32, (3,3), input_shape=(100,100, 3), activation='relu'),
-                            keras.layers.MaxPooling2D(pool_size=(2, 2)),
-                            keras.layers.Conv2D(64, (3,3), activation='relu'),
-                            keras.layers.MaxPooling2D(pool_size=(2, 2)),
-                            keras.layers.Conv2D(128, (3,3), activation='relu'),
-                            keras.layers.MaxPooling2D(pool_size=(2, 2)),
-                            keras.layers.Flatten(),
-                            keras.layers.Dense(10000, activation='sigmoid'),
-                            keras.layers.Reshape((100,100))
-                        ])
+fit = model.fit(train_images, train_masks, batch_size=batch_size, epochs=epochs)
+test_loss, test_acc = model.evaluate(test_images, test_masks, verbose=2)
+summary = model.summary()
 
-            model.compile(optimizer='adam',
-                            loss=['categorical_crossentropy'],
-                            metrics=[tensorToNumpy])
+# output into array with shape (100,100,1)
+predictions = model.predict(test_images)
+prediction_array = []
+for i in predictions:
+    img_array = i.reshape((100, 100, 1))
+    prediction_array.append(img_array)
 
-            fit = model.fit(train_images, train_masks, validation_split=0.2, batch_size=batch_size, epochs=epochs)
-            test_loss, test_acc = model.evaluate(test_images, test_masks, verbose=2)
-            summary = model.summary()
+# save model on computer
+name = 'models/'+saving_name+'.h5'
+model.save(name)
+file = open('models/'+saving_name+".txt", "w")
+file.write(name)
+file.close()
 
-            # output into array with shape (100,100,1)
-            predictions = model.predict(test_images)
-            prediction_array = []
-            for i in predictions:
-                img_array = i.reshape((100, 100, 1))
-                prediction_array.append(img_array)
+# plot 6 predicted masks and 6 original masks
+fig2 = plt.figure(figsize=(2,3))
+for j in range(6):
+    mask_predicted = keras.preprocessing.image.array_to_img(prediction_array[j], scale=True)
+    plt.subplot(2,3,j+1)
+    plt.axis('off')
+    plt.imshow(mask_predicted, cmap='gray')
+fig2.savefig('results/'+saving_name+'pred_mask.png', dpi=fig2.dpi)
 
-            # save model on computer
-            name = 'models/'+'epochs'+str(epochs)+'batch'+str(batch_size)+loss+'.h5'
-            model.save(name)
-            file = open('models/'+str(test_loss)+".txt", "w")
-            file.write(name)
-            file.close()
+fig3 = plt.figure(figsize=(2,3))
+for x in range(6):
+    mask_original = keras.preprocessing.image.array_to_img(test_masks[x].reshape((100,100,1)), scale=True)
+    plt.subplot(2,3,x+1)
+    plt.axis('off')
+    plt.imshow(mask_original, cmap='gray')
+fig3.savefig('results/'+saving_name+'org_mask.png', dpi=fig3.dpi)
 
-            # Plot training & validation ACCURACY VALUES
-            fig = plt.figure()
-            plt.subplot(121)
-            plt.plot(fit.history['tensorToNumpy'])
-            plt.plot(fit.history['val_tensorToNumpy'])
-            plt.title('Model accuracy')
-            plt.ylabel('Accuracy')
-            plt.xlabel('Epoch')
-            plt.legend(['Train', 'Test'], loc='upper left')
+# Plot training & validation ACCURACY VALUES
+fig = plt.figure()
+plt.subplot(121)
+plt.plot(fit.history['accuracy'])
+plt.title('Model accuracy')
+plt.ylabel('Accuracy')
+plt.xlabel('Epoch')
+plt.legend(['Train'], loc='upper left')
 
-            # plot training & validation LOSS VALUES
-            plt.subplot(122)
-            plt.plot(fit.history['loss'])
-            plt.plot(fit.history['val_loss'])
-            plt.title('Model loss')
-            plt.ylabel('Loss')
-            plt.xlabel('Epoch')
-            plt.legend(['Train', 'Test'], loc='upper left')
-            fig.savefig('results/'+'epochs'+str(epochs)+'batch'+str(batch_size)+loss+'.png', dpi=fig.dpi)
-
-            # plot 6 predicted masks
-            fig2 = plt.figure(figsize=(2,3))
-            rows = 2
-            for j in range(6):
-                img = keras.preprocessing.image.array_to_img(prediction_array[j], scale=True)
-                plt.subplot(rows,3,j+1)
-                plt.axis('off')
-                plt.imshow(img, cmap='binary')
-            fig2.savefig('results/'+'epochs'+str(epochs)+'batch'+str(batch_size)+loss+'_mask.png', dpi=fig.dpi)
+# plot training & validation LOSS VALUES
+plt.subplot(122)
+plt.plot(fit.history['loss'])
+plt.title('Model loss')
+plt.ylabel('Loss')
+plt.xlabel('Epoch')
+plt.legend(['Train'], loc='upper left')
+fig.savefig('results/'+saving_name+'.png', dpi=fig.dpi)
