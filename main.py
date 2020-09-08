@@ -148,20 +148,19 @@ for x in range(6):
     plt.imshow(mask_original, cmap='gray')
 fig3.savefig('results/'+saving_name+'org_mask.png', dpi=fig3.dpi)
 
-# Plot training & validation ACCURACY VALUES
+# Plot training ACCURACY VALUES
+gs = gridspec.GridSpec(2,1)
 fig = plt.figure()
-plt.subplot(121)
+plt.subplot(gs[0])
 plt.plot(fit.history['accuracy'])
-plt.title('Model accuracy')
 plt.ylabel('Accuracy')
-plt.xlabel('Epoch')
-plt.legend(['Train'], loc='upper left')
+plt.legend(['Train data'], loc='upper left')
 
-# plot training & validation LOSS VALUES
-plt.subplot(122)
+# plot training LOSS VALUES
+plt.subplot(gs[1])
 plt.plot(fit.history['loss'])
-plt.title('Model loss')
 plt.ylabel('Loss')
 plt.xlabel('Epoch')
-plt.legend(['Train'], loc='upper left')
-fig.savefig('results/'+saving_name+'.png', dpi=fig.dpi)
+plt.legend(['Train data'], loc='upper left')
+plt.tight_layout()
+fig.savefig('results/'+proba+'.png', dpi=fig.dpi)
