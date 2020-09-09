@@ -11,10 +11,10 @@ from keras.models import Sequential, load_model
 from keras.layers import Dense, Flatten
 import keras.backend as K
 
-batch_size = 32
-epochs = 50
+batch_size = 64
+epochs = 1
 loss='categorical_crossentropy'
-saving_name = 'no_validation_categorical_e40_b32'
+saving_name = loss + '_e' + str(epochs) + '_b' + str(batch_size)
 
 ## ----- LOAD DATA ------
 def load_data(folderName):
@@ -132,25 +132,29 @@ file.write(name)
 file.close()
 
 # plot 6 predicted masks and 6 original masks
-fig2 = plt.figure(figsize=(2,3))
-for j in range(6):
-    mask_predicted = keras.preprocessing.image.array_to_img(prediction_array[j], scale=True)
-    plt.subplot(2,3,j+1)
-    plt.axis('off')
-    plt.imshow(mask_predicted, cmap='gray')
-fig2.savefig('results/'+saving_name+'pred_mask.png', dpi=fig2.dpi)
+fig2 = plt.figure(constrained_layout=True)
+gs1 = fig2.add_gridspec(ncols=3,nrows=4)
+n = 0
+for row in range(4):
+    for col in range(3):
+        if row < 2:
+            mask_predicted = keras.preprocessing.image.array_to_img(prediction_array[col], scale=True)
+            fig2.add_subplot(gs1[row,col])
+            plt.axis('off')
+            plt.imshow(mask_predicted, cmap='gray')
+            n+=1
+        else:
+            mask_original = keras.preprocessing.image.array_to_img(test_masks[n-6].reshape((100,100,1)), scale=True)
+            plt.subplot(gs1[row,col])
+            plt.axis('off')
+            plt.imshow(mask_original, cmap='gray')
+            n+=1
+fig2.suptitle('Predicted masks (on top) vs original ones', fontsize=16)
+fig2.savefig('results/'+saving_name+'_masks.png', dpi=fig2.dpi)
 
-fig3 = plt.figure(figsize=(2,3))
-for x in range(6):
-    mask_original = keras.preprocessing.image.array_to_img(test_masks[x].reshape((100,100,1)), scale=True)
-    plt.subplot(2,3,x+1)
-    plt.axis('off')
-    plt.imshow(mask_original, cmap='gray')
-fig3.savefig('results/'+saving_name+'org_mask.png', dpi=fig3.dpi)
-
-# Plot training ACCURACY VALUES
-gs = gridspec.GridSpec(2,1)
+# plot training ACCURACY VALUES
 fig = plt.figure()
+gs = fig.add_gridspec(ncols=1,nrows=2)
 plt.subplot(gs[0])
 plt.plot(fit.history['accuracy'])
 plt.ylabel('Accuracy')
@@ -163,4 +167,4 @@ plt.ylabel('Loss')
 plt.xlabel('Epoch')
 plt.legend(['Train data'], loc='upper left')
 plt.tight_layout()
-fig.savefig('results/'+proba+'.png', dpi=fig.dpi)
+fig.savefig('results/'+saving_name+'.png', dpi=fig.dpi)
