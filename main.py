@@ -11,8 +11,8 @@ from keras.models import Sequential, load_model
 from keras.layers import Dense, Flatten
 import keras.backend as K
 
-batch_size = 64
-epochs = 1
+batch_size = 32
+epochs = 40
 loss='categorical_crossentropy'
 saving_name = loss + '_e' + str(epochs) + '_b' + str(batch_size)
 
