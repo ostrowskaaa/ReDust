@@ -138,7 +138,7 @@ for batch_size in batch:
         for row in range(4):
             for col in range(3):
                 if row < 2:
-                    mask_predicted = keras.preprocessing.image.array_to_img(prediction_array[col], scale=True)
+                    mask_predicted = keras.preprocessing.image.array_to_img(prediction_array[n], scale=True)
                     fig2.add_subplot(gs1[row,col])
                     plt.axis('off')
                     plt.imshow(mask_predicted, cmap='gray')
