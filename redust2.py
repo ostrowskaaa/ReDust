@@ -74,8 +74,8 @@ train_masks = np.ceil(train_masks)
 test_masks = np.ceil(test_masks)
 
 # connect original images with the augmented ones
-#train_images = np.concatenate((train_images, dataset_augmentation(train_images)))  # 3744 images now
-#train_masks = np.concatenate((train_masks, dataset_augmentation(train_masks)))
+train_images = np.concatenate((train_images, dataset_augmentation(train_images)))  # 3744 images now
+train_masks = np.concatenate((train_masks, dataset_augmentation(train_masks)))
 # test_images = np.concatenate((test_images, dataset_augmentation(test_images)))
 # test_masks = np.concatenate((test_masks, dataset_augmentation(test_masks)))
 
@@ -106,7 +106,7 @@ for epochs in epochs:
         for i in range(10):
             pred_mask = np.squeeze(predicted_masks[i])
             true_mask = test_masks[i]
-            cv2.imwrite("results/{}.png".format(i), np.ceil(np.concatenate((true_mask, pred_mask), axis=1) * 255.))
+            cv2.imwrite("results/" + str(epochs) + str(batch_size) + ".{}.png".format(i), np.ceil(np.concatenate((true_mask, pred_mask), axis=1) * 255.))
 
 
         file = open('models/'+str(test_loss)+'test_loss'+str(test_acc)+'test_accuracy'+".txt", "w")
