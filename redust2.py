@@ -74,8 +74,8 @@ train_masks = np.ceil(train_masks)
 test_masks = np.ceil(test_masks)
 
 # connect original images with the augmented ones
-train_images = np.concatenate((train_images, dataset_augmentation(train_images)))  # 3744 images now
-train_masks = np.concatenate((train_masks, dataset_augmentation(train_masks)))
+# train_images = np.concatenate((train_images, dataset_augmentation(train_images)))  # 3744 images now
+# train_masks = np.concatenate((train_masks, dataset_augmentation(train_masks)))
 # test_images = np.concatenate((test_images, dataset_augmentation(test_images)))
 # test_masks = np.concatenate((test_masks, dataset_augmentation(test_masks)))
 
@@ -97,7 +97,10 @@ for epochs in epochs:
 
         # Train the model
         fit = model.fit(train_images, train_masks, batch_size=batch_size, epochs=epochs, shuffle=True, validation_data=(test_images, test_masks))
-        test_loss, test_acc, _, _, _, _  = model.evaluate(test_images, test_masks)
+        test_loss, _, test_acc, _, _, _  = model.evaluate(test_images, test_masks)
+        
+        # save model
+        model.save_weights('models/' + saving_name + 'model.ckpt')
 
         # Predict masks for the test set
         predicted_masks = model.predict(test_images, batch_size=32)
