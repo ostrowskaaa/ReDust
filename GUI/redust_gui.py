@@ -2,6 +2,7 @@
 # 'bce_e1500_b32model.ckpt' is a model from UNet network trained on 500 epochs
 #  with batch size 32, it was one of the best models from the training process
 # mask and repaired image will be saved in the same folder as redust_gui.py
+# this version of program is created for images in a size of 100x100 pix
 
 import os
 from cv2 import cv2
