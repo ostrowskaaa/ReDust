@@ -16,10 +16,10 @@ from utils import load_data, dataset_augmentation, plot_acc_loss
 
 # Define training hyperparameters
 PATH = os.getcwd()
-BATCH_SIZE = [64]
-EPOCHS_NUMBER = [600]
+BATCH_SIZE = 128
+EPOCHS_NUMBER = 1
 LOSS = 'bce'
-SAVING_NAME = 'model{}_e{}_b{}.h5'.format(LOSS, EPOCHS_NUMBER, BATCH_SIZE)
+SAVING_NAME = 'model{}_e{}_b{}'.format(LOSS, EPOCHS_NUMBER, BATCH_SIZE)
 
 # ------  DATASETS  ------
 # images are scaled in order to lower the numbers that CNN is processing
@@ -34,8 +34,8 @@ train_masks = np.ceil(train_masks)
 test_masks = np.ceil(test_masks)
 
 # connect original images with the augmented ones
-train_images = np.concatenate((train_images, dataset_augmentation(train_images))) # 3744 images now
-train_masks = np.concatenate((train_masks, dataset_augmentation(train_masks)))
+#train_images = np.concatenate((train_images, dataset_augmentation(train_images))) # 3744 images now
+#train_masks = np.concatenate((train_masks, dataset_augmentation(train_masks)))
 
 # ------- MODEL TRAINING ----------
 
@@ -49,7 +49,7 @@ fit = model.fit(train_images, train_masks, batch_size=BATCH_SIZE, epochs=EPOCHS_
 test_loss, _, test_acc, _, _, _  = model.evaluate(test_images, test_masks)
 
 # save model
-model.save_weights('models/' + saving_name + 'model.ckpt')
+model.save_weights('models/{}model.ckpt'.format(SAVING_NAME))
 
 # Predict and save masks for the test set
 predicted_masks = model.predict(test_images, batch_size=BATCH_SIZE)
@@ -57,7 +57,7 @@ predicted_masks = model.predict(test_images, batch_size=BATCH_SIZE)
 for i in range(10):
     pred_mask = np.squeeze(predicted_masks[i])
     true_mask = test_masks[i]
-    cv2.imwrite("results/" + str(epochs) + str(batch_size) + ".{}.png".format(i), np.ceil(np.concatenate((true_mask, pred_mask), axis=1) * 255.))
+    cv2.imwrite('results/{}{}.{}.png'.format(EPOCHS_NUMBER, BATCH_SIZE, i), np.ceil(np.concatenate((true_mask, pred_mask), axis=1) * 255.))
 
 results_file = open('models/{}test_loss{}test_accuracy.txt'.format(test_loss, test_acc), 'w')
 results_file.write(SAVING_NAME)
