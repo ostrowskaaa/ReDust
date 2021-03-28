@@ -34,8 +34,8 @@ train_masks = np.ceil(train_masks)
 test_masks = np.ceil(test_masks)
 
 # connect original images with the augmented ones
-#train_images = np.concatenate((train_images, dataset_augmentation(train_images))) # 3744 images now
-#train_masks = np.concatenate((train_masks, dataset_augmentation(train_masks)))
+train_images = np.concatenate((train_images, dataset_augmentation(train_images))) # 3744 images now
+train_masks = np.concatenate((train_masks, dataset_augmentation(train_masks)))
 
 # ------- MODEL TRAINING ----------
 
