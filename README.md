@@ -8,3 +8,6 @@ The results have shown quite a good performance on the training dataset. Althoug
 Thanks to the exploration and consultation, I introduced changes to the architecture as well as rescaled masks from training dataset. I decided to use UNet architecture as it is highly known for its detailed recognition of particular features. All of these changes resulted in accuracy values close to 1 for test images which was a great improvement to earlier versions.  
 
 In further research, it may be promising to use GAN architecture instead of CNN. However, this would result in a change of the entire process of image reparation. The network would learn how to restore missing information from an image without generating masks. This means it would try to recognize what is on an image and try to imitate what could have been in a destroyed part. Another possibility is to apply different noise to the images and enlarge the size of images as I was training models on images with the size of 100x100 pix. This would lead to make the program more efficient and useful. 
+
+# Settings
+To run the code, create two folder in the same folder where the code is 'results' and 'models'. Folder with dataset should also be in the same folder as code.
